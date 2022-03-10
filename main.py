@@ -3,104 +3,93 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 resolution = 20
+plot = [[[[], []], [[], []]], [[[], []], [[], []]]] #  [0-%, 1-m] [0-top, 1-bottm] [0-0X, 1-OY]
 
-z = [[[], []], [[], []]]
-
-def zg(x, c):
-    if x == 0: return(0)
-    else: return(c * ((1.4845 * (x**(1/2))) - (0.63 * (x**1)) - (1.758 * (x**2)) + (1.4215 * (x**3)) - (0.5075 * (x**4))))
-
-custom = False
-if custom:
-    NACA = input("Wprowadź profil: ")
-    lenght = input("Wprowadź dłogość profilu: ")
-else:
-    NACA  = "NACA0012"
-    lenght = 2
-
+#   ----------  DANE ŹRÓDŁOWE   ----------
+NACA  = "NACA2412"
+lenght = 2  # [m]
 naca = list(NACA)
-#print(naca)
 
-if len(naca) == 8:
-    #   ---------------------------------------------
-    #   ----------  PROFILE 4-RO CYFROWE    ---------
-    #   ---------------------------------------------
-    if int(naca[4]) == 0 and int(naca[5]) == 0:
-        #   ---------------------------------------------
-        #   ----------  PROFIL SYMETRYCZNY  -------------
-        #   ---------------------------------------------
+"""
+x_1     -   wartość dla której liczona jest grubość         w postaci ułamka
+x_100   -   wartość dla której liczona jest grubość         w postaci %
 
-        #   ----------  DANE ŹRÓDŁOWE   -----------------
-        c = (int(naca[6])*10 + int(naca[7]))
+y_t     -   dystrybucja grubości    -   funkcja
+z_t     -   wartość wzrucona przez Y_t
 
-        #   ----------  DANE ŹRÓDŁOWE   -----------------
-        for i in range(resolution+1):
-            x = (i*100)/(resolution)
-            zgg=
-            z[0][0][].append(x)
-            z[0][1].append([zg(x/100, c), -1*zg(x/100, c)])
-            z[1][0].append((x/100)*lenght)
-            z[1][1].append([lenght*zg(x/100, c)/100, -1*lenght*zg(x/100, c)/100])
+y_c     -   funcka obliczająca współrzędne linii wygięcia
+z_c     -   wartość wzrucona przez Y_c
 
-            print(i, "\t->\t", x, "\t->\t", round(zg(x/100, c), 3), "\t->\t", round(zg(x/100, c), 3))
+d_d     -   obliczanie pochodnej 
+angle   -   kąt 
 
-    else:
-        #   ---------------------------------------------
-        #   ----------  PROFIL ASYMETRYCZNY -------------
-        #   ---------------------------------------------
+t       -   maksymalna grobość pfofilu                      w postaci ułamka
+m       -   maksymalna strzałka ugięcia                     w postaci ułamka
+p       -   położenie maksymalnej strzałki ugięcia          w postacji ułamka
 
-        f = int(naca[4])/100
-        xf = int(naca[5])/10
-        c = (int(naca[6])*10 + int(naca[7]))
+"""
 
-        for i in range(resolution+1):
-            x = (i*100)/(resolution)
+def y_t(x, t):
+    if x == 0:  y = 0
+    else:       y = t * ((1.4845 * (x**(1/2))) - (0.63 * (x**1)) - (1.758 * (x**2)) + (1.4215 * (x**3)) - (0.5075 * (x**4)))
+    return(y/100)
 
+def y_c(x, m, p):
+    if x < p:   y = (m / (p**2)) * (2*p*x - x**2)
+    else:       y = (m / ((1-p) **2)) * ((1 - 2*p) + 2*p*x - x**2)
+    return(y)
 
-            if x/100 < xf:
-                #print(xf, "\t",f)
-                zf = (f / (xf**2)) * (2 * xf * x/100 - (x/100)**2)
-                a = np.arctan(((2*f) / (xf**2)) * (xf-(x/100)))
+def arc(x, m, p):
+    if x < p:   y = (2*m / (p**2)) * (p - x)
+    else:       y = (2*m / ((1-p) **2)) * (p-x)
+    return(np.arctan(y))
 
-            else:
-                zf = (f / ((1-xf)**2)) * ((1-(2*xf)) + (2*xf*(x/100) - ((x/100)**2)))/2
-                a = np.arctan(((2*f) / ((1-xf)**2)) * (xf-(x/100)))
+if len(naca) == 8:  # PROFILE 4 CYFROWE
 
-            zgg = zg(x/100, c)
+    t = (int(naca[6])*10 + int(naca[7]))
+    m = int(naca[4])/100
+    p = int(naca[5]) *10 /100
+    print("t = ",  t, "\tm = ", m, "\tp = ", p)
 
-            z[0][0].append(x - (zgg * np.sin(a)))               #oś X 1
-            z[0][1].append(zf + (zgg*np.cos(a)))                #oś Y 1
-            z[1][0].append(x + (zgg * np.sin(a)))               #oś X 2
-            z[1][1].append(zf - (zgg*np.cos(a)))                #oś Y 2
+    for i in range(resolution + 1):
+        x_1 = i / resolution
+        x_100 = i *100 / resolution
 
-            print(x, "\t", round(zf, 5), "\t", round(a, 3), "\t", round(zgg, 3), "\t", round(x - (zgg * np.sin(a)), 3), "\t", round(zf + (zgg*np.cos(a)),3))
-            #x, zf, a, zgg, zge
+        z_t = y_t(x_1, t)
+        z_c = y_c(x_1, m, p)
+        angle = arc(x_1, m, p)
 
-elif len(naca) == 9:
-    print("5 digit profile")
-    if int(naca[6]) == 0:
-        print("Profile without undercut")
-    elif int(naca[6]) == 1:
-        print("Profile with undercut")
-    else:
-        print("Profile Error")
+        x_u = x_1 - z_t * np.sin(angle)
+        y_u = z_c + z_t * np.cos(angle)
+        x_l = x_1 + z_t * np.sin(angle)
+        y_l = z_c - z_t * np.cos(angle)
+
+        plot[0][0][0].append(x_u)
+        plot[0][0][1].append(y_u)
+        plot[0][1][0].append(x_1)
+        plot[0][1][1].append(y_l)
+
+        plot[1][0][0].append(x_u *lenght)
+        plot[1][0][1].append(y_u *lenght)
+        plot[1][1][0].append(x_1 *lenght)
+        plot[1][1][1].append(y_l *lenght)
+
+        print(x_1, "\t", round(z_t, 2), "\t", round(z_c, 2), "\t", round(angle, 2), "\t\t\t\t\t", round(x_u, 2), "\t", round(y_u, 2), "\t", round(x_l, 2), "\t", round(y_l, 2))
 
 else:
     print("Profile Error")
 
-#print(z)
-#print(max(z[1]))
-
+#   ----------  RYSOWANIE WYKRESÓW   -----------------
 plt.subplot(2,1,1)
-plt.plot(z[0][0][0], z[0][0][1])  # top half
-plt.plot(z[0][1][0], z[0][1][1])  # bottom half
+plt.plot(plot[0][0][0], plot[0][0][1])  # top half
+plt.plot(plot[0][1][0], plot[0][1][1])  # bottom half
 plt.title(NACA + " [%]")
 plt.axis('equal')
 plt.grid()
 
 plt.subplot(2,1,2)
-plt.plot(z[1][0][0], z[1][0][1])    # top half
-plt.plot(z[1][1][0], z[1][1][1])    # bottom half
+plt.plot(plot[1][0][0], plot[1][0][1])    # top half
+plt.plot(plot[1][1][0], plot[1][1][1])    # bottom half
 plt.title(NACA + " [m]")
 plt.axis('equal')
 plt.grid()
