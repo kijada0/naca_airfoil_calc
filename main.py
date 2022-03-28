@@ -3,14 +3,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import make_interp_spline as mip
 
-resolution = 99
+resolution = 100
 plot = [[[[], []], [[], []]], [[[], []], [[], []]]] #  [0-%, 1-m] [0-top, 1-bottm] [0-0X, 1-OY]
 x_ = []
 y_ = []
 
 #   ----------  DANE ŹRÓDŁOWE   ----------
-NACA  = "NACA25112"
-lenght = 1.8  # [m]
+NACA  = "NACA24012"
+lenght = 1  # [m]
 f = 0.3913
 
 
@@ -29,8 +29,8 @@ angle   -   kąt
 
 t       -   maksymalna grobość pfofilu                      w postaci ułamka
 m       -   maksymalna strzałka ugięcia                     w postaci ułamka
-p       -   położenie maksymalnej strzałki ugięcia          w postacji ułamka
-c       -   współczynnik siły nośnej                        w postacji ułamka
+p       -   położenie maksymalnej strzałki ugięcia          w postaci ułamka
+c       -   współczynnik siły nośnej                        w postaci ułamka
 
 """
 
@@ -116,9 +116,7 @@ elif len(naca) == 9:  # PROFILE 5 CYFROWE
     for i in range(resolution + 1):
         x = i / resolution
 
-        if x > p-0.075 and x < p+0.075:
-            print("Abord: ", x)
-            continue
+        #if x > p-0.075 and x < p+0.075: continue
 
         z_t = y_t(x, t)
         z_c = y_c5(x, m, p, f, k1, k2, u)
@@ -145,21 +143,20 @@ elif len(naca) == 9:  # PROFILE 5 CYFROWE
 else:
     print("Profile Error")
 
-
+"""
 spline = mip(plot[0][0][0], plot[0][0][1], k=3, )
 x_ = np.linspace(0, 1, 500)
 y_ = spline(x_)
-
+"""
 
 #   ----------  RYSOWANIE WYKRESÓW   -----------------
 plt.subplot(2, 1, 1)
-#plt.plot(plot[0][0][0], plot[0][0][1])  # top half
-plt.plot(x_, y_)
+plt.plot(plot[0][0][0], plot[0][0][1])  # top half
+#plt.plot(x_, y_)
 plt.plot(plot[0][1][0], plot[0][1][1])  # bottom half
 plt.title(NACA + " [%]")
 plt.axis('equal')
 plt.grid()
-
 
 plt.subplot(2, 1, 2)
 plt.plot(plot[1][0][0], plot[1][0][1])    # top half
@@ -168,5 +165,14 @@ plt.title(NACA + " [m]")
 plt.axis('equal')
 plt.grid()
 
-
 plt.show()
+
+"""
+print("Data point")
+j = len(plot[0][0][1]) -1
+for i in range(len(plot[0][0][1])):
+    l = j-i
+    print(round(plot[1][0][0][l], 3), "\t", round(plot[1][0][1][l], 3))
+for i in range(len(plot[0][1][1])):
+    print(round(plot[1][1][0][i], 3), "\t", round(plot[1][1][1][i], 3))
+"""
