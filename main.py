@@ -1,18 +1,20 @@
 import math
 import matplotlib.pyplot as plt
+from matplotlib import gridspec
 import numpy as np
 from scipy.interpolate import make_interp_spline as mip
 
-resolution = 100
+resolution = 500
 plot = [[[[], []], [[], []]], [[[], []], [[], []]]] #  [0-%, 1-m] [0-top, 1-bottm] [0-0X, 1-OY]
 x_ = []
 y_ = []
 
 #   ----------  DANE ŹRÓDŁOWE   ----------
-NACA  = "NACA24012"
+NACA  = "NACA63112"
 lenght = 1  # [m]
-f = 0.3913
+f = 0.29
 
+print("input:\n", NACA, "\tl = ", lenght, "\tf = ", f, "\notuput:")
 
 """
 x_1     -   wartość dla której liczona jest grubość         w postaci ułamka
@@ -46,13 +48,13 @@ def y_c4(x, m, p):
     else:       y = (m / ((1-p) **2)) * ((1 - 2*p) + 2*p*x - x**2)
     return(y)
 
-def y_c5(x, m, p, f, k1, k2, u):
-    if u == 0:
-        if x <= p:  y = (k1/6)*((x**3) - 3*f*(x**2) + (f**2)*(3-f)*x)
-        else:       y = (k1/6)*((f**3)*(1-x))
+def y_c5(x, m, p, f, k1, k2, g):
+    if g == 0:
+        if x < f:  y = (k1/6) * ((x**3) - (3*f*(x**2)) + ((f**2)*(3-f)*x))
+        else:      y = ((k1 * (f**3)) /6) * (1-x)
     else:
-        if x <= p:  y = (k1/6) * (((x-f)**3) - (k2/k1)*x*((1-f)**3) - x*(f**3) + f**3)
-        else:       y = (k1/6) * ((k2/k1) * ((x-f)**3) - (k2/k1)*x*((1-f)**3) - x*(f**3) + (f**3))
+        if x < f:  y = (k1/6) * (((x-f)**3) - (k2/k1)*x*((1-f)**3) - x*(f**3) + f**3)
+        else:      y = (k1/6) * ((k2/k1) * ((x-f)**3) - (k2/k1)*((1-f)**3)*x - x*(f**3) + (f**3))
     return(y)
 
 def arc4(x, m, p):
@@ -60,14 +62,22 @@ def arc4(x, m, p):
     else:       y = (2*m / ((1-p) **2)) * (p-x)
     return(np.arctan(y))
 
-def arc5(x, m, p, f, k1, k2, u):
-    if u == 0:
-        if x <= p:  y = (k1/6)*((3*(f**2))-(6*f*x)-((f**2)*(3-f)))
-        else:       y = (k1/6)*(f**3)
+def arc5(x, m, p, f, k1, k2, g):
+    if g == 0:
+        if x < f:  y = (k1/6) * ((3*(x**2)) - (6*f*x) + ((f**2)*(3-f)))
+        else:      y = (k1 * (f**3)) /6
     else:
-        if x <= p:  y = (k1/6) * (3*((x-f)**2) - (k2/k1)*x*((1-f)**3) - f**3)
-        else:       y = (k1/6) * (3*((k2/k1) * ((x-f)**2)) - (k2/k1)*((1-f)**3) - (f**3))
+        if x < f:  y = (k1/6) * (3*((x-f)**2) - (k2/k1)*((1-f)**3) - f**3)
+        else:      y = (k1/6) * (3*((k2/k1) * ((x-f)**2)) - (k2/k1)*((1-f)**3) - (f**3))
     return(np.arctan(y))
+
+def f_out(d5, d6):
+    d = str(d5) + str(d6)
+
+    f_tab = [[10, 0.0580], [20, 0.1260], [30, 0.2025], [40, 0.2900], [50, 0.3910], [21, 0.1300], [31, 0.2170], [41, 0.3180], [51, 0.4410], [00, 0.5]]
+    for i in range(len(f_tab)):
+        if d == str(f_tab[i][0]): break
+    return f_tab[i][1]
 
 if len(naca) == 8:  # PROFILE 4 CYFROWE
 
@@ -98,7 +108,7 @@ if len(naca) == 8:  # PROFILE 4 CYFROWE
         plot[1][1][0].append(x_l *lenght)
         plot[1][1][1].append(y_l *lenght)
 
-        #print(x_1, "\t", round(z_t, 3), "\t", round(z_c, 3), "\t", round(angle, 3), "\t\t\t\t\t", round(x_u, 3), "\t", round(y_u, 3), "\t", round(x_l, 3), "\t", round(y_l, 3))
+        print(x, "\t", round(z_t, 3), "\t", round(z_c, 3), "\t", round(angle, 3), "\t\t\t\t\t", round(x_u, 3), "\t", round(y_u, 3), "\t", round(x_l, 3), "\t", round(y_l, 3))
 
 elif len(naca) == 9:  # PROFILE 5 CYFROWE
 
@@ -108,10 +118,12 @@ elif len(naca) == 9:  # PROFILE 5 CYFROWE
     u = int(naca[6])
     print("c = ", c, "\tp = ", p, "\tt = ", t)
 
+    f = f_out(naca[5], naca[6])
     m = ((3*f - 7*f**2 + 8*f**3 - 4*f**4) / (math.sqrt(f * (1-f)))) - (3/2) * (1-2*f) * ((math.pi/2) - np.arcsin(1 - 2*f))
     k1 = (6*c) / m
-    k2 = k1 * ((3*(f-p)**2 - f**3) / (1-f)**3)
-    print("m = ", round(m, 3), "\tk1 = ", round(k1, 3), "\tk2 = ", round(k2, 3))
+    k2 = k1 * ((3*(f-p)**2 - f**3) / ((1-f)**3))
+    print("m = ", round(m, 3), "\tf = ", f, "\tk1 = ", round(k1, 3), "\tk2 = ", round(k2, 3), "\tk2/k1 = ", round((k2/k1),5))
+    print("\nx  \t\tz_t\t\tz_c\t\tangle")
 
     for i in range(resolution + 1):
         x = i / resolution
@@ -139,7 +151,6 @@ elif len(naca) == 9:  # PROFILE 5 CYFROWE
 
         print(x, "\t", round(z_t, 3), "\t", round(z_c, 3), "\t", round(angle, 3))
 
-
 else:
     print("Profile Error")
 
@@ -150,29 +161,30 @@ y_ = spline(x_)
 """
 
 #   ----------  RYSOWANIE WYKRESÓW   -----------------
-plt.subplot(2, 1, 1)
-plt.plot(plot[0][0][0], plot[0][0][1])  # top half
-#plt.plot(x_, y_)
-plt.plot(plot[0][1][0], plot[0][1][1])  # bottom half
-plt.title(NACA + " [%]")
-plt.axis('equal')
-plt.grid()
+fig, ax = plt.subplots(2, 1, figsize=(8, 4))
 
-plt.subplot(2, 1, 2)
-plt.plot(plot[1][0][0], plot[1][0][1])    # top half
-plt.plot(plot[1][1][0], plot[1][1][1])    # bottom half
-plt.title(NACA + " [m]")
-plt.axis('equal')
-plt.grid()
+ax[0].plot(plot[0][0][0], plot[0][0][1])  # top half
+ax[0].plot(plot[0][1][0], plot[0][1][1])  # bottom half
+ax[0].set_title(NACA + " [%]")
+ax[0].axis('equal')
+ax[0].grid()
+
+ax[1].plot(plot[1][0][0], plot[1][0][1])    # top half
+ax[1].plot(plot[1][1][0], plot[1][1][1])    # bottom half
+ax[1].set_title(NACA + " [m]")
+ax[1].axis('equal')
+ax[1].grid()
+
+plt.subplots_adjust(hspace=0.5)
 
 plt.show()
 
-"""
-print("Data point")
-j = len(plot[0][0][1]) -1
-for i in range(len(plot[0][0][1])):
-    l = j-i
-    print(round(plot[1][0][0][l], 3), "\t", round(plot[1][0][1][l], 3))
-for i in range(len(plot[0][1][1])):
-    print(round(plot[1][1][0][i], 3), "\t", round(plot[1][1][1][i], 3))
-"""
+print_points = 0
+if print_points  == 1:
+    print("Data point")
+    j = len(plot[0][0][1]) -1
+    for i in range(len(plot[0][0][1])):
+        l = j-i
+        print(round(plot[1][0][0][l], 3), "\t", round(plot[1][0][1][l], 3))
+    for i in range(len(plot[0][1][1])):
+        print(round(plot[1][1][0][i], 3), "\t", round(plot[1][1][1][i], 3))
