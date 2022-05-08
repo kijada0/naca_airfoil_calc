@@ -4,7 +4,7 @@ from matplotlib import gridspec
 import numpy as np
 from scipy.interpolate import make_interp_spline as mip
 
-resolution = 500
+resolution = 160
 plot = [[[[], []], [[], []]], [[[], []], [[], []]]] #  [0-%, 1-m] [0-top, 1-bottm] [0-0X, 1-OY]
 x_ = []
 y_ = []
@@ -73,7 +73,6 @@ def arc5(x, m, p, f, k1, k2, g):
 
 def f_out(d5, d6):
     d = str(d5) + str(d6)
-
     f_tab = [[10, 0.0580], [20, 0.1260], [30, 0.2025], [40, 0.2900], [50, 0.3910], [21, 0.1300], [31, 0.2170], [41, 0.3180], [51, 0.4410], [00, 0.5]]
     for i in range(len(f_tab)):
         if d == str(f_tab[i][0]): break
@@ -88,6 +87,7 @@ if len(naca) == 8:  # PROFILE 4 CYFROWE
 
     for i in range(resolution + 1):
         x = i / resolution
+
 
         z_t = y_t(x, t)
         z_c = y_c4(x, m, p)
@@ -126,7 +126,7 @@ elif len(naca) == 9:  # PROFILE 5 CYFROWE
     print("\nx  \t\tz_t\t\tz_c\t\tangle")
 
     for i in range(resolution + 1):
-        x = i / resolution
+        x = (i / resolution)**(2)
 
         #if x > p-0.075 and x < p+0.075: continue
 
@@ -149,7 +149,7 @@ elif len(naca) == 9:  # PROFILE 5 CYFROWE
         plot[1][1][0].append(x_l *lenght)
         plot[1][1][1].append(y_l *lenght)
 
-        print(x, "\t", round(z_t, 3), "\t", round(z_c, 3), "\t", round(angle, 3))
+        print(i, "\t", x, "\t", round(z_t, 3), "\t", round(z_c, 3), "\t", round(angle, 3))
 
 else:
     print("Profile Error")
@@ -163,8 +163,8 @@ y_ = spline(x_)
 #   ----------  RYSOWANIE WYKRESÓW   -----------------
 fig, ax = plt.subplots(2, 1, figsize=(8, 4))
 
-ax[0].plot(plot[0][0][0], plot[0][0][1])  # top half
-ax[0].plot(plot[0][1][0], plot[0][1][1])  # bottom half
+ax[0].plot(plot[0][0][0], plot[0][0][1], marker = "o", markersize = "2", linewidth = "1")  # top half
+ax[0].plot(plot[0][1][0], plot[0][1][1], marker = "o", markersize = "2", linewidth = "1")  # bottom half
 ax[0].set_title(NACA + " [%]")
 ax[0].axis('equal')
 ax[0].grid()
@@ -179,12 +179,31 @@ plt.subplots_adjust(hspace=0.5)
 
 plt.show()
 
-print_points = 0
+print_points = 1
 if print_points  == 1:
     print("Data point")
     j = len(plot[0][0][1]) -1
+    points = ""
     for i in range(len(plot[0][0][1])):
         l = j-i
-        print(round(plot[1][0][0][l], 3), "\t", round(plot[1][0][1][l], 3))
+        points = points + "[" + str(round(plot[1][0][0][l], 3)) + ", " + str(round(plot[1][0][1][l], 3)) + "], "
+        #print(round(plot[1][0][0][l], 3), "\t", round(plot[1][0][1][l], 3))
     for i in range(len(plot[0][1][1])):
-        print(round(plot[1][1][0][i], 3), "\t", round(plot[1][1][1][i], 3))
+        #print(round(plot[1][1][0][i], 3), "\t", round(plot[1][1][1][i], 3))
+        points = points + "[" + str(round(plot[1][1][0][i], 3)) + ", " + str(round(plot[1][1][1][i], 3)) + "], "
+
+    print(points)
+
+xfoil = 1
+if xfoil  == 1:
+    f_name = "xfoil_naca" + NACA[4:] + ".txt"
+    f = open(f_name, "w")
+    #f.write("Data points" + NACA)
+    f.close()
+
+    f = open(f_name, "a")
+    for i in reversed(range(len(plot[0][0][1]))):
+        f.write(str(round(plot[1][0][0][i], 5)) + "\t" + str(round(plot[1][0][1][i], 5)) + "\n")
+    for i in range(1, len(plot[0][1][1])):
+        f.write(str(round(plot[1][1][0][i], 5)) + "\t" + str(round(plot[1][1][1][i], 5)) + "\n")
+    f.close()
