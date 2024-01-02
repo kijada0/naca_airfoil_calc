@@ -87,8 +87,6 @@ if len(naca) == 8:  # PROFILE 4 CYFROWE
 
     for i in range(resolution + 1):
         x = i / resolution
-
-
         z_t = y_t(x, t)
         z_c = y_c4(x, m, p)
         angle = arc4(x, m, p)
@@ -123,7 +121,7 @@ elif len(naca) == 9:  # PROFILE 5 CYFROWE
     k1 = (6*c) / m
     k2 = k1 * ((3*(f-p)**2 - f**3) / ((1-f)**3))
     print("m = ", round(m, 3), "\tf = ", f, "\tk1 = ", round(k1, 3), "\tk2 = ", round(k2, 3), "\tk2/k1 = ", round((k2/k1),5))
-    print("\nx  \t\tz_t\t\tz_c\t\tangle")
+    print("\ni\t\tx\t\tz_t\t\tz_c\t\tangle")
 
     for i in range(resolution + 1):
         x = (i / resolution)**(2)
@@ -149,7 +147,7 @@ elif len(naca) == 9:  # PROFILE 5 CYFROWE
         plot[1][1][0].append(x_l *lenght)
         plot[1][1][1].append(y_l *lenght)
 
-        print(i, "\t", x, "\t", round(z_t, 3), "\t", round(z_c, 3), "\t", round(angle, 3))
+        print(i, " \t", round(x, 3), "\t", round(z_t, 3), "\t", round(z_c, 3), "\t", round(angle, 3))
 
 else:
     print("Profile Error")
@@ -194,11 +192,12 @@ if print_points  == 1:
 
     print(points)
 
+
+#  ----------  ZAPIS DO PLIKU DLA XFOIL  -------------
 xfoil = 1
-if xfoil  == 1:
+if xfoil == 1:
     f_name = "xfoil_naca" + NACA[4:] + ".txt"
     f = open(f_name, "w")
-    #f.write("Data points" + NACA)
     f.close()
 
     f = open(f_name, "a")
